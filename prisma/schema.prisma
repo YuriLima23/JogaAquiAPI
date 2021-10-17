@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+model User {
+  id    Int    @id @default(autoincrement())
+  name  String
+  email String @unique
+  cpf String
+  photo String?
+  phone String?
+  password String
+  type_user Int
+  token_auth String?
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+  // relation with Support 1:N
+  supports Support[]
+  wallet Wallet?
+  solicitations Solicitation[]
+
+}
+model Support {
+  id    Int    @id @default(autoincrement())
+  message  String
+  // apareceça apena o campo user no Banco mas necessita dessas duas colunas para criar a relação
+  user_id User @relation(fields: [user], references: [id])
+  user Int
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
+
+}
+
+
+model Wallet {
+  id    Int    @id @default(autoincrement())
+  balance  String
+  previous_balance String?
+  user_id User @relation(fields: [user], references: [id])
+  user Int
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+model Type_Recicle {
+  id    Int    @id @default(autoincrement())
+  price  String
+  icon String?
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+  solicitations Solicitation[]
+
+}
+
+model Solicitation {
+  id    Int    @id @default(autoincrement())
+  total  Float
+  status Int
+  weight Int?
+  reason_refusal String?
+  date_of_collect DateTime
+  user_id User @relation(fields: [user], references: [id])
+  user Int
+  type_recicle_id Type_Recicle @relation(fields: [type_recicle], references: [id])
+  type_recicle Int
+  history_transaction History_Transaction?
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+model History_Transaction {
+  id    Int    @id @default(autoincrement())
+  status  Int
+  solicitation_id Solicitation @relation(fields: [solicitation], references: [id])
+  solicitation Int
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+
+
+
+
+
