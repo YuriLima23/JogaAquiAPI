@@ -1,5 +1,6 @@
 import express from 'express'
 import routes from './src/routes'
+import { errors } from './src/middlerwars/errors' 
 
 const app = express()
 

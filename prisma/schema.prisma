@@ -15,7 +15,7 @@ model User {
   id    Int    @id @default(autoincrement())
   name  String
   email String @unique
-  cpf String
+  cpf String @unique
   photo String?
   phone String?
   password String
@@ -33,7 +33,7 @@ model Support {
   id    Int    @id @default(autoincrement())
   message  String
   // apareceça apena o campo user no Banco mas necessita dessas duas colunas para criar a relação
-  user_id User @relation(fields: [user], references: [id])
+  user_id User @relation(fields: [user], references: [id], onDelete: Cascade)
   user Int
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
@@ -44,9 +44,9 @@ model Support {
 
 model Wallet {
   id    Int    @id @default(autoincrement())
-  balance  String
-  previous_balance String?
-  user_id User @relation(fields: [user], references: [id])
+  balance  Float
+  previous_balance Float?
+  user_id User @relation(fields: [user], references: [id], onDelete: Cascade, onUpdate: Cascade)
   user Int
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt

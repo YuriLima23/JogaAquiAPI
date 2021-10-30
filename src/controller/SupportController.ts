@@ -6,34 +6,18 @@ import { User } from '.prisma/client';
 
 const create = async (req: Request, res: Response) => {
     try {
-        const { name, email, cpf, password, photo, type_user = 1, phone } = req.body
-        let new_cpf = removeDotCpf(cpf)
+        const { user_id } = req.params
+        const { message } = req.body
 
-        if (!name || !email || !cpf || !password || !photo || !phone) {
-            throw { code: "E001", msg: "Alguns campos estão invalidos, verifique e tente novamente!" }
+        if (!message || !user_id) {
+            throw { code: "E001", msg: "Campos invalidos!" }
         }
-        if (!CPF.isValid(new_cpf)) {
-            throw { code: "E002", msg: "CPF Invalido!" }
+        const user = await prisma.user.findFirst({ where: { id: parseInt(user_id) } })
+        if (!user) {
+            throw { code: "E003", msg: "Tabela usuario não encontrada" }
         }
-        const response = await prisma.user.create({
-            data:
-            {
-                name,
-                email,
-                cpf: new_cpf,
-                photo,
-                password,
-                type_user,
-                phone,
-                wallet: {
-                   create:{
-                       balance:0.0,
-                       previous_balance:0.0,
-                   }
-                }
-            }
-        })
-        return resultSuccess(res, null, "Usuario criado com sucesso")
+        const support = await prisma.support.create({ data: { message, user: user.id } })
+        return resultSuccess(res, null, "Mensagem de suporte criada com sucesso")
     } catch (error) {
         return generateExeption(res, error)
     }
@@ -111,15 +95,17 @@ const generateExeption = (res, error) => {
             msg = `Campo ${field} já esta sendo usado`
             return res.json({ status: 400, msg: msg })
         case 'P2025':
-            msg = "Usuario não existe"
+            msg = "Item na tabela não existe"
             return res.json({ status: 400, msg: msg })
         case 'P2003':
-            msg = "Não foi possivel deletar usuario, existe referencia"
+            msg = "Não foi possivel deletar item, existe referencia"
             return res.json({ status: 400, msg: msg })
+
+
         // erros da aplicação --------------------------------------------------
         case 'E002':
+        case 'E003':
             return res.json({ status: 400, msg: error.msg })
-
         default:
             return res.json({ status: 400, msg: "Erro ao realizar a ação" })
 
