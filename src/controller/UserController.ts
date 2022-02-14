@@ -3,18 +3,20 @@ import prisma from '../database/index'
 import { cpf as CPF } from 'cpf-cnpj-validator';
 import { User } from '.prisma/client';
 
+let TABLE = "Usuario"
 
-const create = async (req: Request, res: Response) => {
+
+const create = async (req: Request, res: Response, next) => {
     try {
-        const { name, email, cpf, password, photo, type_user = 1, phone } = req.body
+        const { name = null, email = null, cpf = null, password = null, photo = null, phone = null } = req.body
         let new_cpf = removeDotCpf(cpf)
-
         if (!name || !email || !cpf || !password || !photo || !phone) {
             throw { code: "E001", msg: "Alguns campos estão invalidos, verifique e tente novamente!" }
         }
         if (!CPF.isValid(new_cpf)) {
             throw { code: "E002", msg: "CPF Invalido!" }
         }
+
         const response = await prisma.user.create({
             data:
             {
@@ -23,24 +25,25 @@ const create = async (req: Request, res: Response) => {
                 cpf: new_cpf,
                 photo,
                 password,
-                type_user,
                 phone,
                 wallet: {
-                   create:{
-                       balance:0.0,
-                       previous_balance:0.0,
-                   }
+                    create: {
+                        balance: 0.0,
+                        previous_balance: 0.0,
+                    }
                 }
             }
         })
-        return resultSuccess(res, null, "Usuario criado com sucesso")
+        
+        return resultSuccess(res, null, ` ${TABLE} criado com sucesso`)
     } catch (error) {
-        return generateExeption(res, error)
+        error.table = TABLE
+        next(error)
     }
 }
 
 
-const list = async (req: Request, res: Response) => {
+const list = async (req: Request, res: Response, next) => {
     try {
         const response = await prisma.user.findMany({
             select: {
@@ -50,31 +53,33 @@ const list = async (req: Request, res: Response) => {
                 photo: true,
                 cpf: true,
                 email: true,
-                type_user: true,
             }
         })
 
         return resultSuccess(res, response, '')
     } catch (error) {
         console.log(error)
-        return generateExeption(res, error)
+        error.table = TABLE
+        next(error)
     }
 
 }
 
 
-const remove = async (req: Request, res: Response) => {
+const remove = async (req: Request, res: Response, next) => {
     const { id } = req.params
     try {
         const response = await prisma.user.delete({ where: { id: parseInt(id) } })
-        return resultSuccess(res, null, 'Usuario deletado com sucesso')
+        return resultSuccess(res, null, `${TABLE} deletado com sucesso`)
     } catch (error) {
         console.log(error)
-        return generateExeption(res, error)
+        error.table = TABLE
+        next(error)
+        //return generateExeption(res, error)
     }
 }
 
-const update = async (req: Request, res: Response) => {
+const update = async (req: Request, res: Response, next) => {
     const { id } = req.params
     const { name, email, photo, type_user = 1, phone } = req.body
 
@@ -85,15 +90,15 @@ const update = async (req: Request, res: Response) => {
                 email,
                 name,
                 photo,
-                type_user,
                 phone
 
             }
         })
-        return resultSuccess(res, null, 'Usuario atualizado com sucesso')
+        return resultSuccess(res, null, `${TABLE} atualizado com sucesso`)
     } catch (error) {
         console.log(error)
-        return generateExeption(res, error)
+        error.table = TABLE
+        next(error)
     }
 }
 
@@ -109,19 +114,19 @@ const generateExeption = (res, error) => {
             let errors = []
             let field = error.meta.target
             msg = `Campo ${field} já esta sendo usado`
-            return res.json({ status: 400, msg: msg })
+            return res.status(400).send({ msg: msg })
         case 'P2025':
-            msg = "Usuario não existe"
-            return res.json({ status: 400, msg: msg })
+            msg = `${TABLE} não existe`
+            return res.status(400).send({ msg: msg })
         case 'P2003':
-            msg = "Não foi possivel deletar usuario, existe referencia"
-            return res.json({ status: 400, msg: msg })
+            msg = `Não foi possivel deletar ${TABLE}, existe referencia`
+            return res.status(400).send({ msg: msg })
         // erros da aplicação --------------------------------------------------
         case 'E002':
-            return res.json({ status: 400, msg: error.msg })
+            return res.status(400).send({ msg: error.msg })
 
         default:
-            return res.json({ status: 400, msg: "Erro ao realizar a ação" })
+            return res.status(400).json({ msg: "Erro ao realizar a ação" })
 
 
     }

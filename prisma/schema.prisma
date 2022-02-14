@@ -10,85 +10,89 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 model User {
-  id    Int    @id @default(autoincrement())
-  name  String
-  email String @unique
-  cpf String @unique
-  photo String?
-  phone String?
-  password String
-  type_user Int
-  token_auth String?
-  createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt
+  id            Int            @id @default(autoincrement())
+  name          String
+  email         String         @unique
+  cpf           String         @unique
+  photo         String?
+  phone         String?
+  password      String
+  token_auth    String?
+  createdAt     DateTime       @default(now())
+  updateAt      DateTime       @updatedAt
   // relation with Support 1:N
-  supports Support[]
-  wallet Wallet?
+  supports      Support[]
+  wallet        Wallet?
   solicitations Solicitation[]
 
 }
+
 model Support {
-  id    Int    @id @default(autoincrement())
-  message  String
+  id               Int      @id @default(autoincrement())
+  message          String
   // apareceça apena o campo user no Banco mas necessita dessas duas colunas para criar a relação
-  user_id User @relation(fields: [user], references: [id], onDelete: Cascade)
-  user Int
-  createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt
-
-
+  user             User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id          Int
+  message_response String?
+  createdAt        DateTime @default(now())
+  updateAt         DateTime @updatedAt
 }
 
-
 model Wallet {
-  id    Int    @id @default(autoincrement())
-  balance  Float
+  id               Int      @id @default(autoincrement())
+  balance          Float
   previous_balance Float?
-  user_id User @relation(fields: [user], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  user Int
-  createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt
+  user             User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user_id          Int      @unique
+  createdAt        DateTime @default(now())
+  updateAt         DateTime @updatedAt
 }
 
 model Type_Recicle {
-  id    Int    @id @default(autoincrement())
-  price  String
-  icon String?
-  createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt
-  solicitations Solicitation[]
+  id            Int                         @id @default(autoincrement())
+  price         String
+  icon          String?
+  createdAt     DateTime                    @default(now())
+  updateAt      DateTime                    @updatedAt
+  solicitations Solicitation_Type_Recicle[]
 
+
+}
+
+model Solicitation_Type_Recicle {
+  id              Int          @id @default(autoincrement())
+  solicitation    Solicitation @relation(fields: [solicitation_id], references: [id])
+  solicitation_id Int
+  type_recicle    Type_Recicle @relation(fields: [type_recicle_id], references: [id])
+  type_recicle_id Int
+
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
 }
 
 model Solicitation {
-  id    Int    @id @default(autoincrement())
-  total  Float
-  status Int
-  weight Int?
-  reason_refusal String?
-  date_of_collect DateTime
-  user_id User @relation(fields: [user], references: [id])
-  user Int
-  type_recicle_id Type_Recicle @relation(fields: [type_recicle], references: [id])
-  type_recicle Int
+  id                  Int                         @id @default(autoincrement())
+  total               Float
+  status              Int
+  weight              Int?
+  reason_refusal      String?
+  date_of_collect     DateTime
+  latitude            Float
+  longitude           Float
+  user                User                        @relation(fields: [user_id], references: [id])
+  user_id             Int
+  type_recicle        Solicitation_Type_Recicle[]
   history_transaction History_Transaction?
-  createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt
+  createdAt           DateTime                    @default(now())
+  updateAt            DateTime                    @updatedAt
 }
 
 model History_Transaction {
-  id    Int    @id @default(autoincrement())
-  status  Int
-  solicitation_id Solicitation @relation(fields: [solicitation], references: [id])
-  solicitation Int
-  createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt
+  id              Int          @id @default(autoincrement())
+  status          Int
+  solicitation Solicitation @relation(fields: [solicitation_id], references: [id])
+  solicitation_id    Int          @unique
+  createdAt       DateTime     @default(now())
+  updateAt        DateTime     @updatedAt
 }
-
-
-
-
-
-
