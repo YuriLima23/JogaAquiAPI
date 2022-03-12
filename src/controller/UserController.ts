@@ -2,17 +2,38 @@ import { Request, Response } from 'express'
 import prisma from '../database/index'
 import { cpf as CPF } from 'cpf-cnpj-validator';
 import { User } from '.prisma/client';
+import { generateCode, getAllRedis, getRedis, setRedis } from '../model/Util';
+import admin from '../model/Firebase';
+import { Message } from 'firebase-admin/lib/messaging/messaging-api';
+import { auth } from 'firebase-admin';
 
 let TABLE = "Usuario"
 
 
+const getAuth = async (req: Request, res: Response, next) => {
+    let { uid, fcm } = req.body
+    try {
+        setRedis(`user:initial:fcm:${uid}`, fcm, null)
+        
+        return resultSuccess(res, null, ` ${TABLE} usuario capturado com sucesso`)
+    } catch (error) {
+        console.log('error', error)
+        error.table = TABLE
+        //next(error)
+        return res.status(400).json({ msg: "error " })
+
+    }
+}
+
 const create = async (req: Request, res: Response, next) => {
     try {
-        const { name = null, email = null, cpf = null, password = null, photo = null, phone = null } = req.body
+        const { imei = null, name = null, email = null, cpf = null, password = null, photo = null, phone = null } = req.body
         let new_cpf = removeDotCpf(cpf)
-        if (!name || !email || !cpf || !password || !photo || !phone) {
+
+        if (!imei || !name || !email || !cpf || !password || !photo || !phone) {
             throw { code: "E001", msg: "Alguns campos estão invalidos, verifique e tente novamente!" }
         }
+
         if (!CPF.isValid(new_cpf)) {
             throw { code: "E002", msg: "CPF Invalido!" }
         }
@@ -20,6 +41,7 @@ const create = async (req: Request, res: Response, next) => {
         const response = await prisma.user.create({
             data:
             {
+                id: imei,
                 name,
                 email,
                 cpf: new_cpf,
@@ -34,13 +56,23 @@ const create = async (req: Request, res: Response, next) => {
                 }
             }
         })
-        
+
         return resultSuccess(res, null, ` ${TABLE} criado com sucesso`)
     } catch (error) {
         error.table = TABLE
         next(error)
     }
 }
+
+const sendCode = () => {
+    try {
+
+    } catch (error) {
+
+    }
+}
+
+
 
 
 const list = async (req: Request, res: Response, next) => {
@@ -69,7 +101,7 @@ const list = async (req: Request, res: Response, next) => {
 const remove = async (req: Request, res: Response, next) => {
     const { id } = req.params
     try {
-        const response = await prisma.user.delete({ where: { id: parseInt(id) } })
+        const response = await prisma.user.delete({ where: { id: id } })
         return resultSuccess(res, null, `${TABLE} deletado com sucesso`)
     } catch (error) {
         console.log(error)
@@ -85,7 +117,7 @@ const update = async (req: Request, res: Response, next) => {
 
     try {
         const response = await prisma.user.update({
-            where: { id: parseInt(id) },
+            where: { id: id },
             data: {
                 email,
                 name,
@@ -140,4 +172,4 @@ const removeDotCpf = (cpf) => {
 
 
 
-export = { create, list, remove, update }
+export = { create, list, remove, update, getAuth }
