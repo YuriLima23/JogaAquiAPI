@@ -2,52 +2,82 @@ import { Request, Response } from 'express'
 import prisma from '../database/index'
 import { cpf as CPF } from 'cpf-cnpj-validator';
 import { User } from '.prisma/client';
-import { generateCode, getAllRedis, getRedis, setRedis } from '../model/Util';
+import { deleteAllRedis, generateCode, getAllRedis, getRedis, setRedis } from '../model/Util';
 import admin from '../model/Firebase';
 import { Message } from 'firebase-admin/lib/messaging/messaging-api';
 import { auth } from 'firebase-admin';
+import { v4 as uuidv4 } from 'uuid';
 
 let TABLE = "Usuario"
 
 
-const getAuth = async (req: Request, res: Response, next) => {
-    let { uid, fcm } = req.body
-    try {
-        setRedis(`user:initial:fcm:${uid}`, fcm, null)
-        
-        return resultSuccess(res, null, ` ${TABLE} usuario capturado com sucesso`)
-    } catch (error) {
-        console.log('error', error)
-        error.table = TABLE
-        //next(error)
-        return res.status(400).json({ msg: "error " })
+// const getAuth = async (req: Request, res: Response, next) => {
+//     let { uid, fcm } = req.body
+//     try {
+//         setRedis(`user:initial:fcm:${uid}`, fcm, null , 1)
+//         return resultSuccess(res, null, ` ${TABLE} usuario capturado com sucesso`)
+//     } catch (error) {
+//         console.log('error', error)
+//         error.table = TABLE
+//         //next(error)
+//         return res.status(400).json({ msg: "error " })
 
+//     }
+// }
+
+const saveUserCache = async (req: Request, res: Response, next) => {
+    try {
+        let { name = null, password = null, phone = null } = req.body
+
+
+        if (!name || !password || !phone) {
+            throw { code: "E001", msg: "Alguns campos estão invalidos, verifique e tente novamente!" }
+        }
+        phone = phone.replace(/\D/g, "")
+        const existUser = await prisma.user.findFirst({ where: { phone } })
+        if (existUser) {
+            throw "auth/user-already-exist"
+        }
+
+        let user = await getRedis(`cache:user:${phone}`, true)
+        if (!user) {
+            setRedis(`cache:user:${phone}`, { name, password, phone }, null, 15 * 60)
+        }
+        return res.status(200).json({ msg: "Usuario cacheado com sucesso" })
+    } catch (error) {
+        console.log("Error save user cache", error)
+        return res.status(500).json(error)
+    }
+
+}
+
+const getUserCache = async (phone, bool) => {
+    try {
+        phone = phone.replace(/\D/g, "")
+        return await getRedis(`cache:user:${phone}`, bool)
+    } catch (error) {
+        console.log("Error recover user ", error)
     }
 }
 
 const create = async (req: Request, res: Response, next) => {
     try {
-        const { imei = null, name = null, email = null, cpf = null, password = null, photo = null, phone = null } = req.body
-        let new_cpf = removeDotCpf(cpf)
+        let { phone = null } = req.body
 
-        if (!imei || !name || !email || !cpf || !password || !photo || !phone) {
+        if (!phone || phone == "") {
             throw { code: "E001", msg: "Alguns campos estão invalidos, verifique e tente novamente!" }
         }
-
-        if (!CPF.isValid(new_cpf)) {
-            throw { code: "E002", msg: "CPF Invalido!" }
+        phone = phone.replace(/\D/g, "")
+        let user = await getUserCache(phone, true)
+        if (!user) {
+            throw "User not exist "
         }
-
         const response = await prisma.user.create({
-            data:
-            {
-                id: imei,
-                name,
-                email,
-                cpf: new_cpf,
-                photo,
-                password,
-                phone,
+            data: {
+                id: uuidv4(),
+                name: user.name,
+                password: user.password,
+                phone: user.phone,
                 wallet: {
                     create: {
                         balance: 0.0,
@@ -57,20 +87,14 @@ const create = async (req: Request, res: Response, next) => {
             }
         })
 
-        return resultSuccess(res, null, ` ${TABLE} criado com sucesso`)
+        //  return resultSuccess(res, null, ` ${TABLE} criado com sucesso`)
+        return res.status(200).json({ msg: "Dados inseridos com sucesso", token: "1234" })
     } catch (error) {
-        error.table = TABLE
-        next(error)
+
+        return res.status(200).json({ msg: "Erro ao inserir o usuario" })
     }
 }
 
-const sendCode = () => {
-    try {
-
-    } catch (error) {
-
-    }
-}
 
 
 
@@ -102,6 +126,31 @@ const remove = async (req: Request, res: Response, next) => {
     const { id } = req.params
     try {
         const response = await prisma.user.delete({ where: { id: id } })
+        return resultSuccess(res, null, `${TABLE} deletado com sucesso`)
+    } catch (error) {
+        console.log(error)
+        error.table = TABLE
+        next(error)
+        //return generateExeption(res, error)
+    }
+}
+const teste = async (req: Request, res: Response, next) => {
+
+    try {
+        console.log("Dados :", await getAllRedis())
+        return resultSuccess(res, await getAllRedis(), `${TABLE} deletado com sucesso`)
+    } catch (error) {
+        console.log(error)
+        error.table = TABLE
+        next(error)
+        //return generateExeption(res, error)
+    }
+}
+
+const removeALl = async (req: Request, res: Response, next) => {
+
+    try {
+        console.log("Dados :", await deleteAllRedis())
         return resultSuccess(res, null, `${TABLE} deletado com sucesso`)
     } catch (error) {
         console.log(error)
@@ -172,4 +221,4 @@ const removeDotCpf = (cpf) => {
 
 
 
-export = { create, list, remove, update, getAuth }
+export = { create, list, remove, update, saveUserCache, teste, removeALl }

@@ -1,9 +1,9 @@
 -- CreateTable
 CREATE TABLE "User" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "cpf" TEXT NOT NULL,
+    "email" TEXT,
+    "cpf" TEXT,
     "photo" TEXT,
     "phone" TEXT,
     "password" TEXT NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE "User" (
 CREATE TABLE "Support" (
     "id" SERIAL NOT NULL,
     "message" TEXT NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "user_id" TEXT NOT NULL,
     "message_response" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updateAt" TIMESTAMP(3) NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE "Wallet" (
     "id" SERIAL NOT NULL,
     "balance" DOUBLE PRECISION NOT NULL,
     "previous_balance" DOUBLE PRECISION,
-    "user_id" INTEGER NOT NULL,
+    "user_id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updateAt" TIMESTAMP(3) NOT NULL,
 
@@ -70,7 +70,7 @@ CREATE TABLE "Solicitation" (
     "date_of_collect" TIMESTAMP(3) NOT NULL,
     "latitude" DOUBLE PRECISION NOT NULL,
     "longitude" DOUBLE PRECISION NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "user_id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updateAt" TIMESTAMP(3) NOT NULL,
 
@@ -93,6 +93,9 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_cpf_key" ON "User"("cpf");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_phone_key" ON "User"("phone");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Wallet_user_id_key" ON "Wallet"("user_id");

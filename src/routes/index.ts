@@ -10,10 +10,13 @@ routes.post("/", (req, res) =>{
 })
 
 routes.post("/users", UserController.create)
+routes.post("/cache/users", UserController.saveUserCache)
 routes.get("/users", UserController.list)
 routes.delete("/users/:id", UserController.remove)
-routes.post("/users/capture", UserController.getAuth)
+// routes.post("/users/capture", UserController.getAuth)
 routes.put("/users/:id", UserController.update)
+routes.get("/teste", UserController.teste)
+routes.get("/deleteRedis", UserController.removeALl)
 
 
 routes.post("/supports/:user_id", SupportController.create)

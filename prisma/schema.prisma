@@ -11,12 +11,12 @@ generator client {
 }
 
 model User {
-  id            String            @id
+  id            String            @id 
   name          String
-  email         String         @unique
-  cpf           String         @unique
+  email         String?         @unique
+  cpf           String?         @unique
   photo         String?
-  phone         String?
+  phone         String?         @unique
   password      String
   token_auth    String?
   createdAt     DateTime       @default(now())
