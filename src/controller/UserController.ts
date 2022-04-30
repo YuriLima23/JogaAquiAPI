@@ -2,10 +2,9 @@ import { Request, Response } from 'express'
 import prisma from '../database/index'
 import { cpf as CPF } from 'cpf-cnpj-validator';
 import { User } from '.prisma/client';
-import { deleteAllRedis, generateCode, getAllRedis, getRedis, setRedis } from '../model/Util';
+import { BcryptPromiseComparePassword, BcryptPromiseHashPassword, deleteAllRedis, generateCode, getAllRedis, getRedis, setRedis } from '../model/Util';
 import admin from '../model/Firebase';
-import { Message } from 'firebase-admin/lib/messaging/messaging-api';
-import { auth } from 'firebase-admin';
+import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 
 let TABLE = "Usuario"
@@ -39,14 +38,14 @@ const saveUserCache = async (req: Request, res: Response, next) => {
             throw "auth/user-already-exist"
         }
 
-        let user = await getRedis(`cache:user:${phone}`, true)
-        if (!user) {
-            setRedis(`cache:user:${phone}`, { name, password, phone }, null, 15 * 60)
-        }
+        //        let user = await getRedis(`cache:user:${phone}`, true)
+
+        setRedis(`cache:user:${phone}`, { name, password, phone }, null, 15 * 60)
+
         return res.status(200).json({ msg: "Usuario cacheado com sucesso" })
     } catch (error) {
         console.log("Error save user cache", error)
-        return res.status(500).json(error)
+        return res.status(400).json(error)
     }
 
 }
@@ -60,9 +59,81 @@ const getUserCache = async (phone, bool) => {
     }
 }
 
+const checkAuth = async (req: Request, res: Response) => {
+
+    let user_id = req.user?.id
+
+    try {
+        if (user_id) {
+            const user = await prisma.user.findFirst({ where: { id: user_id } })
+            delete user?.password
+            if (user) {
+                return res.status(200).json({ user })
+            }
+        }
+        throw "auth/session-expired"
+    } catch (error) {
+        return res.status(400).json(error)
+    }
+
+}
+
+const logout = async (req: Request, res: Response) => {
+    let user_id = req.user?.id
+
+    console.log("LOGOUT", user_id)
+
+    try {
+        const user = await prisma.user.update({ where: { id: user_id }, data: { token_auth: null } })
+        return res.status(200).json({ user })
+
+    } catch (error) {
+        console.log('Erro logout : ', error)
+        return res.status(400).json(error)
+    }
+
+}
+
+const login = async (req: Request, res: Response, next) => {
+    const { phone = "", password = "" } = req.body
+    try {
+
+        if (phone && phone != "" && password && password != "") {
+            let phoneWithoutMask = phone.replace(/\D/g, "")
+            const response = await prisma.user.findFirst({ where: { phone: phoneWithoutMask } })
+            if (response && response.id) {
+                const pass = await BcryptPromiseComparePassword(password, response.password)
+                if (pass) {
+                    let token = jwt.sign({
+                        user: {
+                            email: response.email,
+                            name: response.name,
+                            phone: response.phone,
+                            cpf: response.cpf,
+                            id: response.id
+                        }
+                    }, process.env.SECRET_JWT)
+                    let user = await prisma.user.update({ where: { id: response.id }, data: { token_auth: token } })
+
+                    return res.status(200).json(user)
+                }
+                throw "auth/invalid-login"
+            }
+        }
+        throw "auth/invalid-login"
+    } catch (error) {
+        console.log("Error", error);
+        if (error != "auth/invalid-login") {
+            return res.status(400).json("auth/invalid-login-server")
+        }
+        return res.status(400).json(error)
+    }
+
+}
 const create = async (req: Request, res: Response, next) => {
     try {
         let { phone = null } = req.body
+        let password = null, token = null
 
         if (!phone || phone == "") {
             throw { code: "E001", msg: "Alguns campos estão invalidos, verifique e tente novamente!" }
@@ -72,11 +143,16 @@ const create = async (req: Request, res: Response, next) => {
         if (!user) {
             throw "User not exist "
         }
+        console.log("CHAMOU ", user);
+
+        password = await BcryptPromiseHashPassword(user.password)
+
+
         const response = await prisma.user.create({
             data: {
                 id: uuidv4(),
                 name: user.name,
-                password: user.password,
+                password: password,
                 phone: user.phone,
                 wallet: {
                     create: {
@@ -87,11 +163,37 @@ const create = async (req: Request, res: Response, next) => {
             }
         })
 
-        //  return resultSuccess(res, null, ` ${TABLE} criado com sucesso`)
-        return res.status(200).json({ msg: "Dados inseridos com sucesso", token: "1234" })
-    } catch (error) {
 
-        return res.status(200).json({ msg: "Erro ao inserir o usuario" })
+        token = jwt.sign({
+            user: {
+                email: response.email,
+                name: response.name,
+                phone: response.phone,
+                id: response.id,
+            }
+        }, process.env.SECRET_JWT)
+
+
+        const updateUser = await prisma.user.update({
+            data: { token_auth: token },
+            where: {
+                id: response.id
+            }
+        })
+        //  return resultSuccess(res, null, ` ${TABLE} criado com sucesso`)
+        return res.status(200).json({
+            msg: "Dados inseridos com sucesso", token,
+            user: {
+                email: response.email,
+                name: response.name,
+                phone: response.phone,
+                cpf: response.cpf,
+                id: response.id
+            }
+        })
+    } catch (error) {
+        console.log('error', error)
+        return res.status(400).json({ msg: "Erro ao inserir o usuario" })
     }
 }
 
@@ -221,4 +323,7 @@ const removeDotCpf = (cpf) => {
 
 
 
-export = { create, list, remove, update, saveUserCache, teste, removeALl }
+export default {
+    create, list, remove, update,
+    saveUserCache, teste, removeALl, checkAuth, login, logout
+}

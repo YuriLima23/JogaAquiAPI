@@ -1,4 +1,5 @@
 import Redis from "./Redis"
+import bcrypt from 'bcrypt';
 
 export const generateCode = async (user_id) => {
     try {
@@ -82,6 +83,45 @@ export const verifyCode = (user_id) => {
     } catch (error) {
         console.log("Erro ao salvar no redis")
         return null
+    }
+}
+
+export const BcryptPromiseHashPassword = async (password) => {
+    try {
+        return new Promise((resolve, reject) => {
+            bcrypt.genSalt(10, function (err, salt) {
+                bcrypt.hash(password, salt, function (err, hash) {
+                    if (err) {
+                        reject(err)
+                    }
+                    resolve(hash)
+                });
+            });
+        })
+
+
+    } catch (error) {
+        console.log("Erro ao encriptar a senha ")
+    }
+}
+export const BcryptPromiseComparePassword = async (password, hash) => {
+    try {
+        return new Promise((resolve, reject) => {
+
+            bcrypt.compare(password, hash, function (err, hash) {
+                if (err) {
+                    console.log('Error comaprar senhas : ', err)
+                    reject(false)
+                }
+                console.log('comparou com sucesso', hash)
+                resolve(hash)
+            });
+
+        })
+
+
+    } catch (error) {
+        console.log("Erro ao encriptar a senha ")
     }
 }
 
