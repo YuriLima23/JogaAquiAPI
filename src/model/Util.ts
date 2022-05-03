@@ -17,6 +17,7 @@ export const generateCode = async (user_id) => {
 export const setRedis = async (key, value, options, expire = null) => {
     try {
         let redis = await Redis()
+        console.log("REDIS OPEN : ", redis.isOpen)
         if (typeof value === 'object') {
             value = JSON.stringify(value)
         }
@@ -28,7 +29,7 @@ export const setRedis = async (key, value, options, expire = null) => {
         return true
     } catch (error) {
         console.log("Erro ao salvar no redis", error)
-        return false
+        throw error
     }
 }
 
@@ -47,7 +48,7 @@ export const getRedis = async (key, bool = false) => {
         return result
     } catch (error) {
         console.log("Erro ao dar get no redis", error)
-        return ""
+        throw error
     }
 }
 
@@ -59,7 +60,7 @@ export const getAllRedis = async () => {
         return result
     } catch (error) {
         console.log("Erro ao salvar no redis", error)
-        return ""
+        throw error
     }
 }
 export const deleteAllRedis = async () => {
@@ -70,7 +71,7 @@ export const deleteAllRedis = async () => {
         return result
     } catch (error) {
         console.log("Erro ao salvar no redis", error)
-        return ""
+        throw error
     }
 }
 

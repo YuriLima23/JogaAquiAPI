@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 let TABLE = "Usuario"
 
 
-// const getAuth = async (req: Request, res: Response, next) => {
+// const getAuth = async (req: Request, res: Response, ) => {
 //     let { uid, fcm } = req.body
 //     try {
 //         setRedis(`user:initial:fcm:${uid}`, fcm, null , 1)
@@ -18,13 +18,13 @@ let TABLE = "Usuario"
 //     } catch (error) {
 //         console.log('error', error)
 //         error.table = TABLE
-//         //next(error)
+//         //(error)
 //         return res.status(400).json({ msg: "error " })
 
 //     }
 // }
 
-const saveUserCache = async (req: Request, res: Response, next) => {
+const saveUserCache = async (req: Request, res: Response, ) => {
     try {
         let { name = null, password = null, phone = null } = req.body
 
@@ -56,6 +56,7 @@ const getUserCache = async (phone, bool) => {
         return await getRedis(`cache:user:${phone}`, bool)
     } catch (error) {
         console.log("Error recover user ", error)
+        return null
     }
 }
 
@@ -94,7 +95,7 @@ const logout = async (req: Request, res: Response) => {
 
 }
 
-const login = async (req: Request, res: Response, next) => {
+const login = async (req: Request, res: Response, ) => {
     const { phone = "", password = "" } = req.body
     try {
 
@@ -130,7 +131,7 @@ const login = async (req: Request, res: Response, next) => {
     }
 
 }
-const create = async (req: Request, res: Response, next) => {
+const create = async (req: Request, res: Response, ) => {
     try {
         let { phone = null } = req.body
         let password = null, token = null
@@ -201,7 +202,7 @@ const create = async (req: Request, res: Response, next) => {
 
 
 
-const list = async (req: Request, res: Response, next) => {
+const list = async (req: Request, res: Response) => {
     try {
         const response = await prisma.user.findMany({
             select: {
@@ -216,53 +217,53 @@ const list = async (req: Request, res: Response, next) => {
 
         return resultSuccess(res, response, '')
     } catch (error) {
-        console.log(error)
+        console.log("Error lsit :", error)
         error.table = TABLE
-        next(error)
+        (error)
     }
 
 }
 
 
-const remove = async (req: Request, res: Response, next) => {
+const remove = async (req: Request, res: Response, ) => {
     const { id } = req.params
     try {
         const response = await prisma.user.delete({ where: { id: id } })
         return resultSuccess(res, null, `${TABLE} deletado com sucesso`)
     } catch (error) {
-        console.log(error)
+        console.log("Remove :", error)
         error.table = TABLE
-        next(error)
+        (error)
         //return generateExeption(res, error)
     }
 }
-const teste = async (req: Request, res: Response, next) => {
+const teste = async (req: Request, res: Response, ) => {
 
     try {
         console.log("Dados :", await getAllRedis())
         return resultSuccess(res, await getAllRedis(), `${TABLE} deletado com sucesso`)
     } catch (error) {
-        console.log(error)
+        console.log("TESTE : ", error)
         error.table = TABLE
-        next(error)
+        (error)
         //return generateExeption(res, error)
     }
 }
 
-const removeALl = async (req: Request, res: Response, next) => {
+const removeALl = async (req: Request, res: Response, ) => {
 
     try {
         console.log("Dados :", await deleteAllRedis())
         return resultSuccess(res, null, `${TABLE} deletado com sucesso`)
     } catch (error) {
-        console.log(error)
+        console.log("Error remove all", error)
         error.table = TABLE
-        next(error)
+        (error)
         //return generateExeption(res, error)
     }
 }
 
-const update = async (req: Request, res: Response, next) => {
+const update = async (req: Request, res: Response, ) => {
     const { id } = req.params
     const { name, email, photo, type_user = 1, phone } = req.body
 
@@ -279,9 +280,8 @@ const update = async (req: Request, res: Response, next) => {
         })
         return resultSuccess(res, null, `${TABLE} atualizado com sucesso`)
     } catch (error) {
-        console.log(error)
-        error.table = TABLE
-        next(error)
+        console.log("UPDATE :", error)
+      
     }
 }
 
@@ -290,7 +290,7 @@ const resultSuccess = (res: Response, data: any, msg: string) => {
 }
 
 const generateExeption = (res, error) => {
-    console.log(error)
+    console.log("Error execption", error)
     let msg = ""
     switch (error.code) {
         case 'P2002':

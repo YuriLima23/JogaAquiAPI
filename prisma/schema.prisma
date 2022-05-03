@@ -52,29 +52,29 @@ model Wallet {
 model Type_Recicle {
   id            Int                         @id @default(autoincrement())
   price         String
-  icon          String?
+  color          String?
+  name          String
+  solicitations Solicitation[]
   createdAt     DateTime                    @default(now())
   updateAt      DateTime                    @updatedAt
-  solicitations Solicitation_Type_Recicle[]
 
 
 }
 
-model Solicitation_Type_Recicle {
-  id              Int          @id @default(autoincrement())
-  solicitation    Solicitation @relation(fields: [solicitation_id], references: [id])
-  solicitation_id Int
-  type_recicle    Type_Recicle @relation(fields: [type_recicle_id], references: [id])
-  type_recicle_id Int
-
-  createdAt DateTime @default(now())
-  updateAt  DateTime @updatedAt
-}
+// model Solicitation_Type_Recicle {
+//   solicitation    Solicitation @relation(fields: [solicitation_id], references: [id])
+//   solicitation_id Int
+//   type_recicle    Type_Recicle @relation(fields: [type_recicle_id], references: [id])
+//   type_recicle_id Int
+//   @@id([solicitation_id, type_recicle_id])
+//   createdAt DateTime @default(now())
+//   updateAt  DateTime @updatedAt
+// }
 
 model Solicitation {
   id                  Int                         @id @default(autoincrement())
-  total               Float
-  status              Int
+  total               Float?
+  status              String
   weight              Int?
   reason_refusal      String?
   date_of_collect     DateTime
@@ -82,7 +82,7 @@ model Solicitation {
   longitude           Float
   user                User                        @relation(fields: [user_id], references: [id])
   user_id             String
-  type_recicle        Solicitation_Type_Recicle[]
+  types_recicles        Type_Recicle[]
   history_transaction History_Transaction?
   createdAt           DateTime                    @default(now())
   updateAt            DateTime                    @updatedAt

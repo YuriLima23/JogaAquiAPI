@@ -11,7 +11,7 @@ const getClient = async () => {
         return client
     } catch (error) {
         console.log("Erro ao conectar no redis ", error);
-        return null
+        throw error
     }
 }
 

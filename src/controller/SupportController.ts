@@ -31,7 +31,7 @@ const list = async (req: Request, res: Response, next) => {
         const response = await prisma.support.findMany()
         return resultSuccess(res, response, '')
     } catch (error) {
-        console.log(error)
+        console.log("Teste : ", error)
            error.table = TABLE
         next(error)
     }
@@ -43,7 +43,7 @@ const getOne = async (req: Request, res: Response, next) => {
         const response = await prisma.support.findFirst({ where: { id: parseInt(id) } })
         return resultSuccess(res, response, '')
     } catch (error) {
-        console.log(error)
+        console.log("Teste : ", error)
            error.table = TABLE
         next(error)
     }
@@ -57,7 +57,7 @@ const remove = async (req: Request, res: Response, next) => {
         const response = await prisma.support.delete({ where: { id: parseInt(id) } })
         return resultSuccess(res, null, `${TABLE} deletado com sucesso`)
     } catch (error) {
-        console.log(error)
+        console.log("Teste : ", error)
         error.table = TABLE
         next(error)
         //    error.table = TABLE
@@ -78,7 +78,7 @@ const update = async (req: Request, res: Response, next) => {
         })
         return resultSuccess(res, null, `${TABLE} atualizado com sucesso`)
     } catch (error) {
-        console.log(error)
+        console.log("Teste : ", error)
            error.table = TABLE
         next(error)
     }
@@ -89,7 +89,7 @@ const resultSuccess = (res: Response, data: any, msg: string) => {
 }
 
 const generateExeption = (res, error) => {
-    console.log(error)
+    console.log("Teste : ", error)
     let msg = ""
     switch (error.code) {
         case 'P2002':
