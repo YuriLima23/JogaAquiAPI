@@ -5,6 +5,7 @@ import SolicitationController from '../controller/SolicitationController'
 import UserController from '../controller/UserController'
 import verifyToken from '../middlerwars/authentication';
 import { generateCode } from '../model/Util'
+import GeolocationController from '../controller/GeolocationController'
 require('dotenv').config();
 
 const routes = express.Router()
@@ -47,8 +48,14 @@ routes.delete("/types_recicles/:id", TypeRecicleController.remove)
 // ------------------- Routes Solicitation ------------------- 
 
 routes.post("/solicitations/",verifyToken, SolicitationController.create)
-routes.get("/solicitations/", TypeRecicleController.list)
-routes.delete("/solicitations/:id", TypeRecicleController.remove)
+routes.get("/solicitations/user/",verifyToken, SolicitationController.listByUser)
+routes.put("/solicitations/:id",verifyToken, SolicitationController.update)
+
+
+// ------------------- Geolocation ------------------- 
+
+routes.post("/find/address/", GeolocationController.findLocation)
+
 
 
 

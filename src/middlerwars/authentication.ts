@@ -10,7 +10,7 @@ const verifyToken = (req : Request, res: Response, next : NextFunction) => {
     console.log("TOKEN  : ", process.env.SECRET_JWT)
     try {
         if (!authorization) {
-            return res.status(401).json({ message: "Token não encontrado" })
+            return res.status(401).json("auth/session-expired")
         }
         jwt.verify(authorization,  process.env.SECRET_JWT, async (err, decoded) => {
             if (err){

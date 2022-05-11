@@ -11,7 +11,9 @@
     "author": "Yuri Ramos Lima",
     "license": "ISC",
     "dependencies": {
+        "@googlemaps/google-maps-services-js": "^3.3.13",
         "@prisma/client": "3.2.1",
+        "@types/googlemaps": "^3.43.3",
         "@types/jsonwebtoken": "^8.5.8",
         "@types/node": "^16.10.9",
         "bcrypt": "^5.0.1",

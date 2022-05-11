@@ -4,52 +4,35 @@ import { cpf as CPF } from 'cpf-cnpj-validator';
 import { User } from '.prisma/client';
 import { checkValue } from '../util/validation';
 import { EInitialStatus } from '../util/enums';
+import client from '../model/Google';
 
-const create = async (req: Request, res: Response) => {
-    const { lat, lng, type_recicle = [] } = req.body
-    const user = req.user
-    let now = new Date()
-    let initial_status = EInitialStatus.Proccessing
-    let weight = 0.0
+
+const findLocation = async (req: Request, res: Response) => {
+    const { address, number, complement } = req.body
+    let addresses = []
     try {
-        console.log('user', lat, type_recicle,)
-        if (!checkValue(lat) || !checkValue(lng) || type_recicle.length <= 0 || !checkValue(user)) {
-            return res.status(400).json({ msg: "Campos invalidos" })
-        }
-
-        const types = await prisma.type_Recicle.findMany({ where: { id: { in: type_recicle } } })
-
-        if (types.length > 0) {
-            const response = await prisma.solicitation.create({
-                data: {
-                    status: initial_status,
-                    weight: weight,
-                    date_of_collect: now,
-                    latitude: parseFloat(lat),
-                    longitude: parseFloat(lng),
-                    user: {
-                        connect: {
-                            id: user?.id
-                        }
-                    }
-                },
-                include: { types_recicles: true }
-            })
 
 
-            console.log("Types", types)
-            let types_recicles_change = types.map((item) => {
-                return { id: item.id }
-            })
-            const many = await prisma.solicitation.update({
-                where: { id: response.id }, data: {
-                    types_recicles: { set: types_recicles_change }
+        const response = await client.geocode({
+            params: {
+                address: address,
+                region: "br",
+                language: "pt-br",
+                components: {
+                    country: "br",
                 }
-            })
-            return res.status(200).json({ msg: "Dados inseridos com sucesso", })
+
+
+            }
+        })
+        if (response.data && response.data.results.length > 0) {
+             addresses = response.data.results.map((item) =>   {
+                 return { address: item.formatted_address , place_id : item.place_id}
+             })
         }
 
-        return res.status(400).json("solicitation/types-recicles-invalid")
+        
+        return res.status(200).json(addresses)
 
     } catch (error) {
         console.log("Error create solicitation: ", error)
@@ -71,7 +54,7 @@ const listByUser = async (req: Request, res: Response) => {
     try {
         const id_user = req.user?.id
         const response = await prisma.solicitation.findMany({ where: { user: { id: id_user } }, include: { types_recicles: true } })
-       console.log('response', response)
+        console.log('response', response)
         return res.status(200).json(response)
     } catch (error) {
         console.log('error', error)
@@ -92,9 +75,9 @@ const remove = async (req: Request, res: Response) => {
 
 
 const update = async (req: Request, res: Response) => {
-    const { 
-        type_recicle = [],  
-        total = 0.00 , 
+    const {
+        type_recicle = [],
+        total = 0.00,
         status = EInitialStatus.Proccessing,
         weight,
         date_of_collect } = req.body
@@ -118,7 +101,7 @@ const update = async (req: Request, res: Response) => {
             const response = await prisma.solicitation.update({
                 where: { id: parseInt(solicitation_id) },
                 data: {
-                    total:  total,
+                    total: total,
                     status: status,
                     weight: parseFloat(weight),
                     date_of_collect: date_of_collect,
@@ -153,4 +136,4 @@ const update = async (req: Request, res: Response) => {
 }
 
 
-export default { create, list, remove, listByUser, update }
+export default { findLocation, list, remove, listByUser, update }

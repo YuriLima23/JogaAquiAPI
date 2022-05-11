@@ -73,9 +73,9 @@ model Type_Recicle {
 
 model Solicitation {
   id                  Int                         @id @default(autoincrement())
-  total               Float?
+  total               Decimal?                    @db.Decimal(8,2)
   status              String
-  weight              Int?
+  weight              Decimal?                    @db.Decimal(8,2)
   reason_refusal      String?
   date_of_collect     DateTime
   latitude            Float
