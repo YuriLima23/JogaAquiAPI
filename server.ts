@@ -6,7 +6,7 @@ import cors from "cors"
 import "dotenv-safe"
 const app = express()
 
-const PORT  = 3333
+const PORT  = 3334
 app.use(cors());
 app.use(express.json())
 app.use(routes)

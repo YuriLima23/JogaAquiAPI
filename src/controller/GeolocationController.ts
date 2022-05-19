@@ -5,33 +5,41 @@ import { User } from '.prisma/client';
 import { checkValue } from '../util/validation';
 import { EInitialStatus } from '../util/enums';
 import client from '../model/Google';
+import { LatLng, LatLngLiteral, PlaceAutocompleteType } from '@googlemaps/google-maps-services-js';
 
 
 const findLocation = async (req: Request, res: Response) => {
-    const { address, number, complement } = req.body
+    const { address, number, dd } = req.body
+
     let addresses = []
     try {
-
-
-        const response = await client.geocode({
+        let position: LatLng = {
+            latitude: -31.351593, //latitude de bagé
+            longitude: -54.081189 //longitude de bagé
+        }
+        const response = await client.placeAutocomplete({
             params: {
-                address: address,
-                region: "br",
-                language: "pt-br",
-                components: {
-                    country: "br",
-                }
-
-
+                input: address,
+                language: "PT-BR",
+                location: position,
+                radius: 20000,
+                strictbounds: true,
+                components: ["country:BR"],
+                types: PlaceAutocompleteType.geocode
             }
         })
-        if (response.data && response.data.results.length > 0) {
-             addresses = response.data.results.map((item) =>   {
-                 return { address: item.formatted_address , place_id : item.place_id}
-             })
+
+
+        if (response.data.status == "OK" && response.data.predictions.length > 0) {
+            response.data.predictions.forEach((item) => {
+                //verifica se vier com endereço bairro e cidade se vier sem endereço ou sem bairro esta fora o endereço
+                if (item.description.split("-").length >= 3) {
+                    addresses.push({ address: item.description, place_id: item.place_id })
+                }
+            })
         }
 
-        
+
         return res.status(200).json(addresses)
 
     } catch (error) {
