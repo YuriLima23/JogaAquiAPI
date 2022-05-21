@@ -4,49 +4,55 @@ import { cpf as CPF } from 'cpf-cnpj-validator';
 import { User } from '.prisma/client';
 import { checkValue } from '../util/validation';
 import { EInitialStatus } from '../util/enums';
+import { lookForAddress } from '../model/Places';
 
 const create = async (req: Request, res: Response) => {
-    const { lat, lng, type_recicle = [] } = req.body
+    const { address,number , date, time, type_recicle = [],lng } = req.body
     const user = req.user
-    let now = new Date()
+    let now = new Date(date)
+    now.setTime(time)
     let initial_status = EInitialStatus.Proccessing
     let weight = 0.0
     try {
-        console.log('user', lat, type_recicle,)
-        if (!checkValue(lat) || !checkValue(lng) || type_recicle.length <= 0 || !checkValue(user)) {
+        console.log('user', now.toLocaleDateString("pt-br"), type_recicle,)
+        if (type_recicle.length <= 0 || !checkValue(user)) {
             return res.status(400).json({ msg: "Campos invalidos" })
         }
-
+        
         const types = await prisma.type_Recicle.findMany({ where: { id: { in: type_recicle } } })
-
+        
         if (types.length > 0) {
-            const response = await prisma.solicitation.create({
-                data: {
-                    status: initial_status,
-                    weight: weight,
-                    date_of_collect: now,
-                    latitude: parseFloat(lat),
-                    longitude: parseFloat(lng),
-                    user: {
-                        connect: {
-                            id: user?.id
+            const resp = await lookForAddress(address, number)
+            if(resp){
+                const response = await prisma.solicitation.create({
+                    data: {
+                        status: initial_status,
+                        weight: weight,
+                        date_of_collect: now,
+                        latitude: parseFloat(resp.lat.toString()),
+                        longitude: parseFloat(resp.lng.toString()),
+                        user: {
+                            connect: {
+                                id: user?.id
+                            }
                         }
+                    },
+                    include: { types_recicles: true }
+                })
+    
+    
+                console.log("Types", types)
+                let types_recicles_change = types.map((item) => {
+                    return { id: item.id }
+                })
+                const many = await prisma.solicitation.update({
+                    where: { id: response.id }, data: {
+                        types_recicles: { set: types_recicles_change }
                     }
-                },
-                include: { types_recicles: true }
-            })
-
-
-            console.log("Types", types)
-            let types_recicles_change = types.map((item) => {
-                return { id: item.id }
-            })
-            const many = await prisma.solicitation.update({
-                where: { id: response.id }, data: {
-                    types_recicles: { set: types_recicles_change }
-                }
-            })
-            return res.status(200).json({ msg: "Dados inseridos com sucesso", })
+                })
+                return res.status(200).json({ msg: "Dados inseridos com sucesso", })
+            }
+           
         }
 
         return res.status(400).json("solicitation/types-recicles-invalid")

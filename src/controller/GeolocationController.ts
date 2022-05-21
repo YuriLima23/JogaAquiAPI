@@ -9,7 +9,7 @@ import { LatLng, LatLngLiteral, PlaceAutocompleteType } from '@googlemaps/google
 
 
 const findLocation = async (req: Request, res: Response) => {
-    const { address, number, dd } = req.body
+    const { address } = req.body
 
     let addresses = []
     try {
@@ -39,6 +39,7 @@ const findLocation = async (req: Request, res: Response) => {
             })
         }
 
+        console.log(response.data.predictions[0])
 
         return res.status(200).json(addresses)
 

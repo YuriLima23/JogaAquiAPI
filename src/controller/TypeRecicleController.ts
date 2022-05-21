@@ -22,7 +22,7 @@ const create = async (req: Request, res: Response) => {
 const list = async (req: Request, res: Response) => {
     try {
         const response = await prisma.type_Recicle.findMany()
-
+        console.log(response)
         return res.status(200).json(response)
     } catch (error) {
 

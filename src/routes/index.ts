@@ -6,6 +6,7 @@ import UserController from '../controller/UserController'
 import verifyToken from '../middlerwars/authentication';
 import { generateCode } from '../model/Util'
 import GeolocationController from '../controller/GeolocationController'
+import { lookForAddress } from '../model/Places'
 require('dotenv').config();
 
 const routes = express.Router()
@@ -55,6 +56,7 @@ routes.put("/solicitations/:id",verifyToken, SolicitationController.update)
 // ------------------- Geolocation ------------------- 
 
 routes.post("/find/address/", GeolocationController.findLocation)
+routes.post("/find/",(req, res) => lookForAddress(req.body.address, req.body.number))
 
 
 
