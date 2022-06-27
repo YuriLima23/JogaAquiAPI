@@ -18,7 +18,6 @@ const verifyToken = (req : Request, res: Response, next : NextFunction) => {
                 return res.status(401).json("auth/token_invalid");
             } 
             let user = decoded?.user
-            console.log("TOKENUSER : ",decoded )
             const response = await prisma.user.findFirst({where:{id : user.id}})
 
             if(response?.token_auth != authorization){

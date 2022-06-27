@@ -73,26 +73,28 @@ model Type_Recicle {
 
 model Solicitation {
   id                  Int                         @id @default(autoincrement())
-  total               Decimal?                    @db.Decimal(8,2)
+  total               Float?                      @default(0.00)
   status              String
-  weight              Decimal?                    @db.Decimal(8,2)
+  weight              Float?                      @default(0.00)
   reason_refusal      String?
   date_of_collect     DateTime
   latitude            Float
   longitude           Float
+  address             String                      @default("")
   user                User                        @relation(fields: [user_id], references: [id])
   user_id             String
   types_recicles        Type_Recicle[]
-  history_transaction History_Transaction?
+  cobrado             Boolean                     @default(false)
   createdAt           DateTime                    @default(now())
   updateAt            DateTime                    @updatedAt
 }
 
-model History_Transaction {
-  id              Int          @id @default(autoincrement())
-  status          Int
-  solicitation Solicitation @relation(fields: [solicitation_id], references: [id])
-  solicitation_id    Int          @unique
-  createdAt       DateTime     @default(now())
-  updateAt        DateTime     @updatedAt
-}
+// model Transaction {
+//   id              Int          @id @default(autoincrement())
+//   solicitation Solicitation    @relation(fields: [solicitation_id], references: [id])
+//   solicitation_id    Int   
+//   type_recicle Type_Recicle    @relation(fields: [type_recicle_id], references: [id])
+//   type_recicle_id    Int  
+//   createdAt       DateTime     @default(now())
+//   updateAt        DateTime     @updatedAt
+// }

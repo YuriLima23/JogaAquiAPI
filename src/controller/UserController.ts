@@ -6,6 +6,7 @@ import { BcryptPromiseComparePassword, BcryptPromiseHashPassword, deleteAllRedis
 import admin from '../model/Firebase';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import { EInitialStatus } from '../util/enums';
 
 let TABLE = "Usuario"
 
@@ -24,7 +25,7 @@ let TABLE = "Usuario"
 //     }
 // }
 
-const saveUserCache = async (req: Request, res: Response, ) => {
+const saveUserCache = async (req: Request, res: Response,) => {
     try {
         let { name = null, password = null, phone = null } = req.body
 
@@ -40,7 +41,7 @@ const saveUserCache = async (req: Request, res: Response, ) => {
 
         //        let user = await getRedis(`cache:user:${phone}`, true)
 
-        setRedis(`cache:user:${phone}`, { name, password, phone }, null, 15 * 60)
+        await setRedis(`cache:user:${phone}`, { name, password, phone }, null, 15 * 60)
 
         return res.status(200).json({ msg: "Usuario cacheado com sucesso" })
     } catch (error) {
@@ -95,8 +96,9 @@ const logout = async (req: Request, res: Response) => {
 
 }
 
-const login = async (req: Request, res: Response, ) => {
+const login = async (req: Request, res: Response,) => {
     const { phone = "", password = "" } = req.body
+    console.log("LOGIN")
     try {
 
         if (phone && phone != "" && password && password != "") {
@@ -118,9 +120,54 @@ const login = async (req: Request, res: Response, ) => {
 
                     return res.status(200).json(user)
                 }
+                console.log("LOGIN 3");
+
                 throw "auth/invalid-login"
             }
         }
+        console.log("LOGIN 4");
+
+        throw "auth/invalid-login"
+    } catch (error) {
+        console.log("Error login", error);
+        if (error != "auth/invalid-login") {
+            return res.status(400).json("auth/invalid-login-server")
+        }
+        return res.status(400).json(error)
+    }
+
+}
+
+
+const loginWithCode = async (req: Request, res: Response,) => {
+    const { phone = "" } = req.body
+    try {
+
+        if (phone && phone != "") {
+            let phoneWithoutMask = phone.replace(/\D/g, "")
+            const response = await prisma.user.findFirst({ where: { phone: phoneWithoutMask } })
+            if (response && response.id) {
+
+                let token = jwt.sign({
+                    user: {
+                        email: response.email,
+                        name: response.name,
+                        phone: response.phone,
+                        cpf: response.cpf,
+                        id: response.id
+                    }
+                }, process.env.SECRET_JWT)
+                let user = await prisma.user.update({ where: { id: response.id }, data: { token_auth: token } })
+
+                return res.status(200).json(user)
+
+
+            }
+
+            throw "auth/invalid-login-user-not-exist"
+        }
+        console.log("LOGIN 2");
+
         throw "auth/invalid-login"
     } catch (error) {
         console.log("Error", error);
@@ -131,7 +178,9 @@ const login = async (req: Request, res: Response, ) => {
     }
 
 }
-const create = async (req: Request, res: Response, ) => {
+
+
+const create = async (req: Request, res: Response,) => {
     try {
         let { phone = null } = req.body
         let password = null, token = null
@@ -212,20 +261,47 @@ const list = async (req: Request, res: Response) => {
                 photo: true,
                 cpf: true,
                 email: true,
+                token_auth: true
             }
         })
 
-        return resultSuccess(res, response, '')
+        return res.status(200).json(response)
     } catch (error) {
         console.log("Error lsit :", error)
         error.table = TABLE
-        (error)
+            (error)
+    }
+
+}
+//não ta pronto
+const getDataWallet = async (req: Request, res: Response) => {
+    const user_id = req.user?.id
+    let date = new Date()
+
+    try {
+
+        const response = await prisma.wallet.findFirst({
+            where: {
+                user_id: user_id
+            }
+        })
+
+        const resp = await prisma.solicitation.findMany({
+            where: {
+                user_id: user_id,
+                status:EInitialStatus.Finish
+            },
+        })
+        return res.status(200).json({ ...response, solicitations: resp })
+    } catch (error) {
+        console.log("Erro wallet recover data" , error);
+        return res.status(400).json("wallet/error-recover")
     }
 
 }
 
 
-const remove = async (req: Request, res: Response, ) => {
+const remove = async (req: Request, res: Response,) => {
     const { id } = req.params
     try {
         const response = await prisma.user.delete({ where: { id: id } })
@@ -233,11 +309,11 @@ const remove = async (req: Request, res: Response, ) => {
     } catch (error) {
         console.log("Remove :", error)
         error.table = TABLE
-        (error)
+            (error)
         //return generateExeption(res, error)
     }
 }
-const teste = async (req: Request, res: Response, ) => {
+const teste = async (req: Request, res: Response,) => {
 
     try {
         console.log("Dados :", await getAllRedis())
@@ -245,12 +321,12 @@ const teste = async (req: Request, res: Response, ) => {
     } catch (error) {
         console.log("TESTE : ", error)
         error.table = TABLE
-        (error)
+            (error)
         //return generateExeption(res, error)
     }
 }
 
-const removeALl = async (req: Request, res: Response, ) => {
+const removeALl = async (req: Request, res: Response,) => {
 
     try {
         console.log("Dados :", await deleteAllRedis())
@@ -258,12 +334,12 @@ const removeALl = async (req: Request, res: Response, ) => {
     } catch (error) {
         console.log("Error remove all", error)
         error.table = TABLE
-        (error)
+            (error)
         //return generateExeption(res, error)
     }
 }
 
-const update = async (req: Request, res: Response, ) => {
+const update = async (req: Request, res: Response,) => {
     const { id } = req.params
     const { name, email, photo, type_user = 1, phone } = req.body
 
@@ -281,7 +357,7 @@ const update = async (req: Request, res: Response, ) => {
         return resultSuccess(res, null, `${TABLE} atualizado com sucesso`)
     } catch (error) {
         console.log("UPDATE :", error)
-      
+
     }
 }
 
@@ -289,41 +365,10 @@ const resultSuccess = (res: Response, data: any, msg: string) => {
     return res.json({ status: 200, data, msg })
 }
 
-const generateExeption = (res, error) => {
-    console.log("Error execption", error)
-    let msg = ""
-    switch (error.code) {
-        case 'P2002':
-            let errors = []
-            let field = error.meta.target
-            msg = `Campo ${field} já esta sendo usado`
-            return res.status(400).send({ msg: msg })
-        case 'P2025':
-            msg = `${TABLE} não existe`
-            return res.status(400).send({ msg: msg })
-        case 'P2003':
-            msg = `Não foi possivel deletar ${TABLE}, existe referencia`
-            return res.status(400).send({ msg: msg })
-        // erros da aplicação --------------------------------------------------
-        case 'E002':
-            return res.status(400).send({ msg: error.msg })
-
-        default:
-            return res.status(400).json({ msg: "Erro ao realizar a ação" })
-
-
-    }
-}
-
-const removeDotCpf = (cpf) => {
-    cpf = cpf.split('.').join("")
-    cpf = cpf.split('-').join("")
-    return cpf
-}
 
 
 
 export default {
     create, list, remove, update,
-    saveUserCache, teste, removeALl, checkAuth, login, logout
+    saveUserCache, teste, removeALl, checkAuth, login, logout, loginWithCode, getDataWallet
 }

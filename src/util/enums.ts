@@ -3,4 +3,4 @@ export enum EInitialStatus {
     Refused = "Recusado",
     Finish = "Finalizado",
     Collect = "Coletando"
-} 
+}

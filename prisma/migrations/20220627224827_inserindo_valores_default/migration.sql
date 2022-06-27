@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Solicitation" ALTER COLUMN "total" SET DEFAULT 0.00,
+ALTER COLUMN "weight" SET DEFAULT 0.00;

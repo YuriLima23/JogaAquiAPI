@@ -10,19 +10,23 @@ import { lookForAddress } from '../model/Places'
 require('dotenv').config();
 
 const routes = express.Router()
-routes.post("/", (req, res) => {
-    return res.send("OLA MUNDO 2")
+routes.post("/", verifyToken, (req, res) => {
+
+    return UserController.getDataWallet(req, res)
 })
 // ------------------- Public Routes ------------------- 
 routes.post("/login", UserController.login)
-routes.post("/logout", verifyToken,UserController.logout)
+routes.post("/login/code", UserController.loginWithCode)
+routes.post("/logout", verifyToken, UserController.logout)
 routes.post("/checkAuth", verifyToken, UserController.checkAuth)
 
 // ------------------- Routes Users ------------------- 
 routes.post("/users", UserController.create)
 routes.post("/cache/users", UserController.saveUserCache)
+routes.get("/users/wallet", verifyToken, UserController.getDataWallet)
 routes.get("/users", UserController.list)
 routes.delete("/users/:id", UserController.remove)
+routes.get("/users/wallet", UserController.getDataWallet)
 
 // routes.post("/users/capture", UserController.getAuth)
 routes.put("/users/:id", UserController.update)
@@ -48,16 +52,16 @@ routes.delete("/types_recicles/:id", TypeRecicleController.remove)
 
 // ------------------- Routes Solicitation ------------------- 
 
-routes.post("/solicitations/",verifyToken, SolicitationController.create)
-routes.get("/solicitations/user/",verifyToken, SolicitationController.listByUser)
-routes.put("/solicitations/:id",verifyToken, SolicitationController.update)
+routes.post("/solicitations/", verifyToken, SolicitationController.create)
+routes.get("/solicitations/user/", verifyToken, SolicitationController.listByUser)
+routes.put("/solicitations/:id", verifyToken, SolicitationController.update)
+routes.put("/solicitations/status/:id", verifyToken, SolicitationController.changeStatusSolicitation)
 
 
 // ------------------- Geolocation ------------------- 
 
 routes.post("/find/address/", GeolocationController.findLocation)
-routes.post("/find/",(req, res) => lookForAddress(req.body.address, req.body.number))
-
+routes.post("/find/", (req, res) => lookForAddress(req.body.address, req.body.number))
 
 
 

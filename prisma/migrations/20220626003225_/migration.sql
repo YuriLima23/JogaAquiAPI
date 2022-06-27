@@ -55,27 +55,17 @@ CREATE TABLE "Solicitation" (
     "id" SERIAL NOT NULL,
     "total" DOUBLE PRECISION,
     "status" TEXT NOT NULL,
-    "weight" INTEGER,
+    "weight" DOUBLE PRECISION,
     "reason_refusal" TEXT,
     "date_of_collect" TIMESTAMP(3) NOT NULL,
     "latitude" DOUBLE PRECISION NOT NULL,
     "longitude" DOUBLE PRECISION NOT NULL,
     "user_id" TEXT NOT NULL,
+    "cobrado" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updateAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Solicitation_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "History_Transaction" (
-    "id" SERIAL NOT NULL,
-    "status" INTEGER NOT NULL,
-    "solicitation_id" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updateAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "History_Transaction_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -97,9 +87,6 @@ CREATE UNIQUE INDEX "User_phone_key" ON "User"("phone");
 CREATE UNIQUE INDEX "Wallet_user_id_key" ON "Wallet"("user_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "History_Transaction_solicitation_id_key" ON "History_Transaction"("solicitation_id");
-
--- CreateIndex
 CREATE UNIQUE INDEX "_SolicitationToType_Recicle_AB_unique" ON "_SolicitationToType_Recicle"("A", "B");
 
 -- CreateIndex
@@ -113,9 +100,6 @@ ALTER TABLE "Wallet" ADD CONSTRAINT "Wallet_user_id_fkey" FOREIGN KEY ("user_id"
 
 -- AddForeignKey
 ALTER TABLE "Solicitation" ADD CONSTRAINT "Solicitation_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "History_Transaction" ADD CONSTRAINT "History_Transaction_solicitation_id_fkey" FOREIGN KEY ("solicitation_id") REFERENCES "Solicitation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_SolicitationToType_Recicle" ADD FOREIGN KEY ("A") REFERENCES "Solicitation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
