@@ -152,7 +152,7 @@ const changeStatusSolicitation = async (req: Request, res: Response) => {
                 id: id
             },
         })
-        let updateWallet =await  updateValuesWallet(user_id)
+        let updateWallet = await  updateValuesWallet(user_id)
         if(EInitialStatus.Finish == custom_status && !updateWallet ){
             throw "Erro ao atulizar a carteira do usuario"
         }

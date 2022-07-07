@@ -24,13 +24,13 @@ routes.post("/checkAuth", verifyToken, UserController.checkAuth)
 routes.post("/users", UserController.create)
 routes.post("/cache/users", UserController.saveUserCache)
 routes.get("/users/wallet", verifyToken, UserController.getDataWallet)
-routes.get("/users", UserController.list)
+routes.get("/users",verifyToken, UserController.list)
+routes.get("/user/", verifyToken, UserController.getOne)
 routes.delete("/users/:id", UserController.remove)
 routes.get("/users/wallet", UserController.getDataWallet)
 
 // routes.post("/users/capture", UserController.getAuth)
-routes.put("/users/:id", UserController.update)
-routes.get("/teste", UserController.teste)
+routes.post("/user/profile",verifyToken, UserController.update)
 routes.get("/deleteRedis", UserController.removeALl)
 
 // ------------------- Routes Support ------------------- 

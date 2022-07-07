@@ -273,6 +273,30 @@ const list = async (req: Request, res: Response) => {
     }
 
 }
+
+const getOne = async (req: Request, res: Response) => {
+    try {
+        const response = await prisma.user.findFirst({
+            where:{id : req.user?.id},
+            select: {
+                id: true,   
+                name: true,
+                phone: true,
+                photo: true,
+                cpf: true,
+                email: true,
+                token_auth: true
+            }
+        })
+        console.log('user', response)
+
+        return res.status(200).json(response)
+    } catch (error) {
+        return res.status(400).json("user/error-recover")
+
+    }
+
+}
 //não ta pronto
 const getDataWallet = async (req: Request, res: Response) => {
     const user_id = req.user?.id
@@ -340,24 +364,23 @@ const removeALl = async (req: Request, res: Response,) => {
 }
 
 const update = async (req: Request, res: Response,) => {
-    const { id } = req.params
-    const { name, email, photo, type_user = 1, phone } = req.body
-
+    const id = req.user?.id
+    const { name, email, photo = "", cpf } = req.body
+    console.log('photo', photo)
     try {
         const response = await prisma.user.update({
             where: { id: id },
             data: {
                 email,
                 name,
-                photo,
-                phone
-
+                photo, 
+                cpf
             }
         })
-        return resultSuccess(res, null, `${TABLE} atualizado com sucesso`)
+        return res.status(200).json(response)
     } catch (error) {
-        console.log("UPDATE :", error)
-
+        console.log("error update user controller :", error)
+        return res.status(400).json(error)
     }
 }
 
@@ -369,6 +392,6 @@ const resultSuccess = (res: Response, data: any, msg: string) => {
 
 
 export default {
-    create, list, remove, update,
+    create, list, getOne, remove, update,
     saveUserCache, teste, removeALl, checkAuth, login, logout, loginWithCode, getDataWallet
 }

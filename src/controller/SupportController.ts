@@ -5,7 +5,7 @@ import { User } from '.prisma/client';
 
 let TABLE = "Support"
 let FK = "USUARIO"
-const create = async (req: Request, res: Response, next) => {
+const create = async (req: Request, res: Response) => {
     try {
         const { user_id } = req.params
         const { message } = req.body
@@ -18,10 +18,10 @@ const create = async (req: Request, res: Response, next) => {
             throw { code: "E003", msg: `Tabela ${FK} não encontrada` }
         }
         const support = await prisma.support.create({ data: { message, user: user.id, message_response: "" } })
-        return resultSuccess(res, null, "Mensagem de suporte criada com sucesso")
+        return res.status(200).json()
     } catch (error) {
-           error.table = TABLE
-        next(error)
+        return res.status(400).json({error})
+
     }
 }
 
