@@ -35,7 +35,7 @@ routes.get("/deleteRedis", UserController.removeALl)
 
 // ------------------- Routes Support ------------------- 
 
-routes.post("/supports/:user_id", SupportController.create)
+routes.post("/supports/",verifyToken, SupportController.create)
 routes.get("/supports/", SupportController.list)
 routes.delete("/supports/:id", SupportController.remove)
 routes.get("/supports/:id", SupportController.getOne)
@@ -56,6 +56,7 @@ routes.post("/solicitations/", verifyToken, SolicitationController.create)
 routes.get("/solicitations/user/", verifyToken, SolicitationController.listByUser)
 routes.put("/solicitations/:id", verifyToken, SolicitationController.update)
 routes.put("/solicitations/status/:id", verifyToken, SolicitationController.changeStatusSolicitation)
+routes.delete("/solicitations/:id", verifyToken, SolicitationController.remove)
 
 
 // ------------------- Geolocation ------------------- 

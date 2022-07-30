@@ -84,12 +84,14 @@ const listByUser = async (req: Request, res: Response) => {
 }
 
 const remove = async (req: Request, res: Response) => {
+    const user_id = req.user?.id
+    const solicitation_id = req.params.id
     try {
-
-        return res.status(200).json({ msg: "Dados inseridos com sucesso", })
+        const response = await prisma.solicitation.delete({ where: { id: parseInt(solicitation_id) } })
+        return res.status(200).json({ msg: "Dados removeido com sucesso", })
     } catch (error) {
-
-        return res.status(400).json({ msg: "Erro ao inserir o usuario" })
+        console.log('Error remove data solicitation', error)
+        return res.status(400).json()
     }
 }
 const changeStatusSolicitation = async (req: Request, res: Response) => {
@@ -152,11 +154,11 @@ const changeStatusSolicitation = async (req: Request, res: Response) => {
                 id: id
             },
         })
-        let updateWallet = await  updateValuesWallet(user_id)
-        if(EInitialStatus.Finish == custom_status && !updateWallet ){
+        let updateWallet = await updateValuesWallet(user_id)
+        if (EInitialStatus.Finish == custom_status && !updateWallet) {
             throw "Erro ao atulizar a carteira do usuario"
         }
-       
+
 
         return res.status(200).json({ msg: "Dados atualizados com sucesso", })
     } catch (error) {
@@ -228,7 +230,7 @@ const update = async (req: Request, res: Response) => {
     }
 }
 
-const updateValuesWallet = async (user_id? : string) => {
+const updateValuesWallet = async (user_id?: string) => {
     let date = new Date()
     let first_day = new Date(date.getFullYear(), date.getMonth(), 1)
     let last_date = new Date(date.getFullYear(), date.getMonth() + 1, 0)
@@ -239,7 +241,7 @@ const updateValuesWallet = async (user_id? : string) => {
                 user: {
                     id: user_id
                 },
-                status:EInitialStatus.Finish,
+                status: EInitialStatus.Finish,
                 cobrado: false,
                 createdAt: { gte: first_day, lt: last_date },
             },
@@ -249,7 +251,7 @@ const updateValuesWallet = async (user_id? : string) => {
         })
 
         const resp = await prisma.wallet.findFirst({ where: { user_id: user_id } })
-    
+
         if (!resp) {
             throw "Carteira não encontrada"
         }

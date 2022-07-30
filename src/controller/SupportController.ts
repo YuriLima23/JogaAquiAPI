@@ -2,25 +2,31 @@ import { Request, Response } from 'express'
 import prisma from '../database/index'
 import { cpf as CPF } from 'cpf-cnpj-validator';
 import { User } from '.prisma/client';
+import { checkValue } from '../util/validation';
 
-let TABLE = "Support"
-let FK = "USUARIO"
+
 const create = async (req: Request, res: Response) => {
+    const user = req.user
     try {
-        const { user_id } = req.params
-        const { message } = req.body
+     
+        const { subject, description } = req.body
 
-        if (!message || !user_id) {
-            throw { code: "E001", msg: "Campos invalidos!" }
-        }
-        const user = await prisma.user.findFirst({ where: { id: parseInt(user_id) } })
-        if (!user) {
-            throw { code: "E003", msg: `Tabela ${FK} não encontrada` }
-        }
-        const support = await prisma.support.create({ data: { message, user: user.id, message_response: "" } })
+        if(!checkValue(subject) || !checkValue(description) ){
+            throw "support/invalid-data"
+       }
+        
+        const support = await prisma.support.create({ data: { 
+            message: description,
+            subject :subject,
+            user:{
+                connect:{
+                    id:user?.id 
+                }
+            }
+         } })
         return res.status(200).json()
     } catch (error) {
-        return res.status(400).json({error})
+        return res.status(400).json(error)
 
     }
 }
