@@ -25,7 +25,7 @@ model User {
   supports      Support[]
   wallet        Wallet?
   solicitations Solicitation[]
-
+  @@map("users")
 }
 
 model Support {
@@ -38,6 +38,8 @@ model Support {
   subject          String
   createdAt        DateTime @default(now())
   updateAt         DateTime @updatedAt
+
+  @@map("supports")
 }
 
 model Wallet {
@@ -48,17 +50,21 @@ model Wallet {
   user_id          String      @unique
   createdAt        DateTime @default(now())
   updateAt         DateTime @updatedAt
+
+    @@map("wallets")
+
 }
 
 model Type_Recicle {
   id            Int                         @id @default(autoincrement())
   price         String
-  color          String?
+  color         String?
   name          String
   solicitations Solicitation[]
   createdAt     DateTime                    @default(now())
   updateAt      DateTime                    @updatedAt
 
+      @@map("types_recicles")
 
 }
 
@@ -80,6 +86,9 @@ model Solicitation {
   cobrado             Boolean                     @default(false)
   createdAt           DateTime                    @default(now())
   updateAt            DateTime                    @updatedAt
+
+      @@map("solicitations")
+
 }
 
 

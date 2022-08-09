@@ -1,11 +1,8 @@
 import { Request, Response } from 'express'
 import prisma from '../database/index'
-import { cpf as CPF } from 'cpf-cnpj-validator';
-import { User } from '.prisma/client';
-import { checkValue, convertStatusSolicitation } from '../util/validation';
+import { checkValue } from '../util/validation';
 import { EInitialStatus } from '../util/enums';
 import { lookForAddress } from '../model/Places';
-import { STATUS_CODES } from 'http';
 
 const create = async (req: Request, res: Response) => {
     const { address, number, date, time, type_recicle = [], lng } = req.body

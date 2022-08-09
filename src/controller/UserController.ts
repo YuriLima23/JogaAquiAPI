@@ -1,9 +1,6 @@
 import { Request, Response } from 'express'
 import prisma from '../database/index'
-import { cpf as CPF } from 'cpf-cnpj-validator';
-import { User } from '.prisma/client';
 import { BcryptPromiseComparePassword, BcryptPromiseHashPassword, deleteAllRedis, generateCode, getAllRedis, getRedis, setRedis } from '../model/Util';
-import admin from '../model/Firebase';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { EInitialStatus } from '../util/enums';
